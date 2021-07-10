@@ -1,12 +1,12 @@
 import cv2 as cv
 import numpy as np
-import pyautogui
+from PIL import ImageGrab
 from time import time
 
 loop_time = time()
 while(True):
 
-    screenshot = pyautogui.screenshot()
+    screenshot = ImageGrab.grab()
     screenshot = np.array(screenshot)
     screenshot = cv.cvtColor(screenshot, cv.COLOR_RGB2BGR)
 
