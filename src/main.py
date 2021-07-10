@@ -1,14 +1,13 @@
 import cv2 as cv
-import numpy as np
-from PIL import ImageGrab
 from time import time
+from windowcapture import WindowCapture
+
+wincap = WindowCapture('Legends Of Idleon')
 
 loop_time = time()
 while(True):
 
-    screenshot = ImageGrab.grab()
-    screenshot = np.array(screenshot)
-    screenshot = cv.cvtColor(screenshot, cv.COLOR_RGB2BGR)
+    screenshot = wincap.get_screenshot()
 
     cv.imshow('Computer Vision', screenshot)
 
@@ -20,5 +19,6 @@ while(True):
     if cv.waitKey(1) == ord('q'):
         cv.destroyAllWindows()
         break
+
 
 print('Done.')
