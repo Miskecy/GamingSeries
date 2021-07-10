@@ -10,6 +10,9 @@ import numpy as np
 haystack_img = cv.imread('src/idleon_farm.jpg', cv.IMREAD_UNCHANGED)
 needle_img = cv.imread('src/idleon_cooler.jpg', cv.IMREAD_UNCHANGED)
 
+needle_w = needle_img.shape[1]
+needle_h = needle_img.shape[0]
+
 result = cv.matchTemplate(haystack_img, needle_img, cv.TM_CCOEFF_NORMED)
 print(result)
 
@@ -29,27 +32,43 @@ locations = list(zip(*locations[::-1]))
 # <zip object at 0x012DEB28>
 # list(zip(*res[::-1]))
 # [(7, 10), (8, 20), (9, 30)]
-print(locations)
+# print(locations)
 
-if locations:
+# first we need to create the list of [x, y, w, h] rectangles
+rectangles = []
+for loc in locations:
+    rect = [int(loc[0]), int(loc[1]), needle_w, needle_h]
+    rectangles.append(rect)
+    rectangles.append(rect)
+
+rectangles, weights = cv.groupRectangles(rectangles, 1, 0.5)
+print(rectangles)
+
+if len(rectangles):
     print('Found needle.')
 
-    needle_w = needle_img.shape[1]
-    needle_h = needle_img.shape[0]
     line_color = (0, 255, 0)
     line_thickness = 2
     line_type = cv.LINE_4
+    marker_color = (255, 0, 255)
+    marker_thickness = 2
+    marker_type = cv.MARKER_CROSS
 
     # need to loop over all the locations and draw their rectangle
-    for loc in locations:
+    for (x, y, w, h) in rectangles:
+        '''
         # determine the box positions
-        top_left = loc
-        bottom_right = (top_left[0] + needle_w, top_left[1] + needle_h)
+        top_left = (x, y)
+        bottom_right = (x + w, y + h)
 
         # draw the box
         cv.rectangle(haystack_img, top_left, bottom_right,
                      line_color, line_thickness, line_type)
-
+        '''
+        center_x = x + int(w/2)
+        center_y = y + int(h/2)
+        cv.drawMarker(haystack_img, (center_x, center_y),
+                      marker_color, marker_type)
     # cv.imwrite('result.jpg', haystack_img)
     cv.imshow('Matches', haystack_img)
     cv.waitKey()
