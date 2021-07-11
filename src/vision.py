@@ -1,5 +1,6 @@
 import cv2 as cv
 import numpy as np
+from edgefilter import EdgeFilter
 from hsvfilter import HsvFilter
 
 
@@ -131,6 +132,7 @@ class Vision:
         cv.createTrackbar('HMax', self.TRACKBAR_WINDOW, 0, 179, nothing)
         cv.createTrackbar('SMax', self.TRACKBAR_WINDOW, 0, 255, nothing)
         cv.createTrackbar('VMax', self.TRACKBAR_WINDOW, 0, 255, nothing)
+
         # Set default value for Max HSV trackbars
         cv.setTrackbarPos('HMax', self.TRACKBAR_WINDOW, 179)
         cv.setTrackbarPos('SMax', self.TRACKBAR_WINDOW, 255)
@@ -141,6 +143,18 @@ class Vision:
         cv.createTrackbar('SSub', self.TRACKBAR_WINDOW, 0, 255, nothing)
         cv.createTrackbar('VAdd', self.TRACKBAR_WINDOW, 0, 255, nothing)
         cv.createTrackbar('VSub', self.TRACKBAR_WINDOW, 0, 255, nothing)
+
+        # trackbars for edge creation
+        cv.createTrackbar('KernelSize', self.TRACKBAR_WINDOW, 1, 30, nothing)
+        cv.createTrackbar('ErodeIter', self.TRACKBAR_WINDOW, 1, 5, nothing)
+        cv.createTrackbar('DilateIter', self.TRACKBAR_WINDOW, 1, 5, nothing)
+        cv.createTrackbar('Canny1', self.TRACKBAR_WINDOW, 1, 200, nothing)
+        cv.createTrackbar('Canny2', self.TRACKBAR_WINDOW, 1, 500, nothing)
+
+        # set default value for Canny trackbars
+        cv.setTrackbarPos('KernelSize', self.TRACKBAR_WINDOW, 5)
+        cv.setTrackbarPos('Canny1', self.TRACKBAR_WINDOW, 100)
+        cv.setTrackbarPos('Canny2', self.TRACKBAR_WINDOW, 500)
 
     # returns an HSV filter object based on the control GUI values
     def get_hsv_filter_from_controls(self):
@@ -157,6 +171,20 @@ class Vision:
         hsv_filter.vAdd = cv.getTrackbarPos('VAdd', self.TRACKBAR_WINDOW)
         hsv_filter.vSub = cv.getTrackbarPos('VSub', self.TRACKBAR_WINDOW)
         return hsv_filter
+
+    # returns a Canny edge filter object based on the control GUI values
+    def get_edge_filter_from_controls(self):
+        # get current positions of all tackbars
+        edge_filter = EdgeFilter()
+        edge_filter.KernelSize = cv.getTrackbarPos(
+            'KernelSize', self.TRACKBAR_WINDOW)
+        edge_filter.erodeIter = cv.getTrackbarPos(
+            'erodeIter', self.TRACKBAR_WINDOW)
+        edge_filter.dilateIter = cv.getTrackbarPos(
+            'dilateIter', self.TRACKBAR_WINDOW)
+        edge_filter.Canny1 = cv.getTrackbarPos('Canny1', self.TRACKBAR_WINDOW)
+        edge_filter.Canny2 = cv.getTrackbarPos('Canny2', self.TRACKBAR_WINDOW)
+        return edge_filter
 
     # given an image and an HSV filter, apply the filter and return the resulting image.
     # if a filter is not supplied, the control GUI trackbars will be used
@@ -185,6 +213,29 @@ class Vision:
 
         # convert back to BGR for imshow() to display it properly
         img = cv.cvtColor(result, cv.COLOR_HSV2BGR)
+
+        return img
+
+    # given an image and a Canny edge filter, apply the filter and return the resulting image.
+    # if a filter is not supplied, the control GUI trackbars will be used
+    def apply_edge_filter(self, original_image, edge_filter=None):
+        # if we haven't been given a defined filter, use the filter values from the GUI
+        if not edge_filter:
+            edge_filter = self.get_edge_filter_from_controls()
+
+        kernel = np.ones(
+            (edge_filter.KernelSize, edge_filter.KernelSize), np.uint8)
+        eroded_image = cv.erode(original_image, kernel,
+                                iterations=edge_filter.erodeIter)
+        dilated_image = cv.dilate(
+            eroded_image, kernel, iterations=edge_filter.dilateIter)
+
+        # canny edge detection
+        result = cv.Canny(dilated_image, edge_filter.Canny1,
+                          edge_filter.Canny2)
+
+        # convert single channel image back to BGR
+        img = cv.cvtColor(result, cv.COLOR_GRAY2BGR)
 
         return img
 

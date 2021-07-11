@@ -4,6 +4,7 @@ from time import time
 from windowcapture import WindowCapture
 from vision import Vision
 from hsvfilter import HsvFilter
+from edgefilter import EdgeFilter
 
 # initialize the WindowCapture
 wincap = WindowCapture('Legends Of Idleon')
@@ -25,16 +26,19 @@ while(True):
         continue
 
     # pre-process the image
-    processed_image = vision_melty.apply_hsv_filter(screenshot, hsv_filter)
+    processed_image = vision_melty.apply_hsv_filter(screenshot)
+
+    # do edge detection
+    edges_image = vision_melty.apply_edge_filter(processed_image)
 
     # do object detection
-    rectangles = vision_melty.find(processed_image, 0.5)
+    # rectangles = vision_melty.find(processed_image, 0.5)
 
     # draw the detection results into the original image
-    output_image = vision_melty.draw_rectangles(processed_image, rectangles)
+    # output_image = vision_melty.draw_rectangles(processed_image, rectangles)
 
     # display the processed image
-    cv.imshow('Matches', output_image)
+    cv.imshow('Matches', edges_image)
 
     # debug the loop rate
     print('FPS {}'.format(1 / (time() - loop_time)))
